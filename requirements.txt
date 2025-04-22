@@ -2,4 +2,3 @@ streamlit
 pgmpy
 networkx
 matplotlib
-ast
