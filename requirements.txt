@@ -1,1 +1,5 @@
-
+streamlit
+pgmy
+networkx
+matplotlib
+ast
