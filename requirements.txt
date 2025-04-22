@@ -1,5 +1,5 @@
 streamlit
-pgmy
+pgmpy
 networkx
 matplotlib
 ast
