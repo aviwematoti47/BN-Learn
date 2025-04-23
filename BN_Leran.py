@@ -19,14 +19,9 @@ This app simulates a **biased Bayesian Network** for Lotto numbers (1–52).
 balls = [f"Ball_{i}" for i in range(1, 8)]
 edges = [(balls[i], balls[i+1]) for i in range(len(balls) - 1)]
 
-# Initialize Bayesian Network manually
-try:
-    model = BayesianNetwork(edges)
-except ImportError:
-    st.error("pgmpy requires optional dependencies (like pygraphviz). Ensure your environment includes `pydot` or `graphviz`.")
-    st.stop()
+model = BayesianNetwork(edges)
 
-# Biased probability distribution (favor lower numbers)
+# Function to generate a biased distribution favoring lower numbers
 def get_biased_distribution():
     raw = np.array([1 / (i+1) for i in range(52)])  # i from 0 to 51 → 1 to 52
     return list(raw / raw.sum())
