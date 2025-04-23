@@ -19,26 +19,48 @@ This app simulates a **biased Bayesian Network** for Lotto numbers (1–52).
 balls = [f"Ball_{i}" for i in range(1, 8)]
 edges = [(balls[i], balls[i+1]) for i in range(len(balls) - 1)]
 
+# Initialize Bayesian Network
 model = BayesianNetwork(edges)
 
 # Function to generate a biased distribution favoring lower numbers
 def get_biased_distribution():
-    raw = np.array([1 / (i+1) for i in range(52)])  # i from 0 to 51 → 1 to 52
+    raw = np.array([1 / (i + 1) for i in range(52)])  # i from 0 to 51 → 1 to 52
     return list(raw / raw.sum())
 
-# Define CPDs
+# Define CPDs with validation
 cpds = []
+cpd_error = False
+
 for ball in balls:
     dist = get_biased_distribution()
-    cpd = TabularCPD(variable=ball, variable_card=52, values=[dist])
-    cpds.append(cpd)
-    model.add_cpds(cpd)
+
+    # Validate shape
+    if len(dist) != 52:
+        st.error(f"❌ Distribution for {ball} is invalid. Expected 52 values, got {len(dist)}.")
+        cpd_error = True
+        break
+
+    # Debug display
+    st.write(f"Creating CPD for {ball}")
+    st.write(f"Length: {len(dist)} | First 5 values: {dist[:5]}")
+
+    try:
+        cpd = TabularCPD(variable=ball, variable_card=52, values=[dist])
+        model.add_cpds(cpd)
+        cpds.append(cpd)
+    except ValueError as e:
+        st.error(f"❌ Error creating CPD for {ball}: {e}")
+        cpd_error = True
+        break
 
 # Validate model
-if model.check_model():
-    st.success("✅ Bayesian Network with CPDs created and validated successfully!")
+if not cpd_error:
+    if model.check_model():
+        st.success("✅ Bayesian Network with CPDs created and validated successfully!")
+    else:
+        st.error("❌ Model structure or CPDs are invalid.")
+        st.stop()
 else:
-    st.error("❌ Model validation failed.")
     st.stop()
 
 # Visualize the DAG
