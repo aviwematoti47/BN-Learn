@@ -93,5 +93,9 @@ st.pyplot(fig)
 # Simulate lotto draw
 st.subheader("🎰 Simulate Lotto Draw")
 if st.button("Draw Numbers"):
-    draw = [np.random.choice(range(1, 53), p=get_biased_distribution()) for _ in range(7)]
-    st.success(f"Your Numbers: {draw}")
+    numbers = np.arange(1, 53)
+    probs = get_biased_distribution()
+    
+    # Sample without replacement using biased probabilities
+    draw = np.random.choice(numbers, size=7, replace=False, p=probs)
+    st.success(f"Your Numbers: {sorted(draw.tolist())}")
