@@ -98,4 +98,9 @@ if st.button("Draw Numbers"):
     
     # Sample without replacement using biased probabilities
     draw = np.random.choice(numbers, size=7, replace=False, p=probs)
-    st.success(f"Your Numbers: {sorted(draw.tolist())}")
+    main = draw[:6]
+    bonus = draw[6]
+    st.success(f"🎯 Main Numbers: {sorted(main.tolist())} | ⭐ Bonus: {bonus}")
+    
+
+
