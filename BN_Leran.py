@@ -1,85 +1,75 @@
 import streamlit as st
 from pgmpy.models import DiscreteBayesianNetwork
+from pgmpy.factors.discrete import TabularCPD
+from pgmpy.sampling import BayesianModelSampling
 import networkx as nx
 import matplotlib.pyplot as plt
-import ast
 
-# Configure Streamlit page
-st.set_page_config(page_title="Bayesian Network Builder", layout="centered")
+# -------------- Streamlit Config --------------
+st.set_page_config(page_title="Bayesian Lotto Predictor", layout="centered")
+st.title("🎯 Bayesian Lotto Predictor")
+st.markdown("Build a uniform Bayesian Network and simulate biased lotto draws (1–52, 6 main + 1 bonus).")
 
-# App title and instructions
-st.title("Bayesian Network Builder")
-st.markdown(
-    """
-Build and visualise your own Bayesian Network using `pgmpy`.
+# -------------- DAG Structure Setup --------------
+st.header("1️⃣ Uniform DAG Creator")
 
-### ✍️ Instructions:
-- Enter your edges below in Python list format.
-- Each tuple represents a directed edge from one node to another.
+# Define 7 lotto balls: Ball_1 to Ball_7 (bonus)
+nodes = [f'Ball_{i}' for i in range(1, 8)]
+edges = [(nodes[i], nodes[i+1]) for i in range(len(nodes)-1)]
 
-Example:
-```python
-[('A', 'B'), ('B', 'C')]
-```"""
-)
+st.code(str(edges), language='python')
+model = DiscreteBayesianNetwork(edges)
 
-# Text area for user input
-user_input = st.text_area("Type your edge list here:")
+# -------------- Constructive Bias Setup --------------
+st.header("2️⃣ Apply Constructive Bias")
 
-# The button that triggers network processing
-if st.button("Process Network"):
-    if not user_input:
-        st.warning("Please enter a list of 2‑element tuples before processing.")
-    else:
-        try:
-            parsed = ast.literal_eval(user_input)
+apply_bias = st.checkbox("Apply constructive bias to Ball_1?")
+biased_values = [3, 7, 15, 28, 33, 44, 51]  # Hot numbers from experience/perception
 
-            # Validate format
-            if isinstance(parsed, list) and all(isinstance(e, tuple) and len(e) == 2 for e in parsed):
-                st.success("✅ Edges parsed successfully!")
+# Construct bias for all 7 balls
+hot_numbers = [3, 7, 15, 28, 33, 44, 51]
+def create_biased_cpd(ball_name):
+    probs = [0.07 if i+1 in hot_numbers else 0.002 for i in range(52)]
+    total = sum(probs)
+    norm_probs = [[p/total for p in probs]]
+    return TabularCPD(ball_name, 52, norm_probs)
 
-                # Optional: build the pgmpy model to check structure
-                model = DiscreteBayesianNetwork(parsed)
+# Apply to all balls
+cpds = [create_biased_cpd(f'Ball_{i}') for i in range(1, 8)]
+for cpd in cpds:
+    model.add_cpds(cpd)
 
-                # Build a NetworkX DiGraph for visualization
-                G = nx.DiGraph()
-                G.add_edges_from(parsed)
+# Optional: Define uniform CPTs for remaining nodes (not conditional yet)
+for i in range(2, 8):
+    cpd = TabularCPD(f"Ball_{i}", 52, [[1/52 for _ in range(52)]])
+    model.add_cpds(cpd)
 
-                # Compute layout
-                pos = nx.spring_layout(G)
+# -------------- Network Visualization --------------
+st.header("3️⃣ DAG Visualization")
 
-                # Create Matplotlib figure with automatic padding
-                fig, ax = plt.subplots(figsize=(6, 6), constrained_layout=True)
+G = nx.DiGraph()
+G.add_edges_from(edges)
+pos = nx.spring_layout(G)
 
-                # Draw nodes and labels
-                nx.draw_networkx_nodes(G, pos, node_color="lightblue", node_size=2000, ax=ax)
-                nx.draw_networkx_labels(G, pos, font_size=14, font_weight="bold", ax=ax)
+fig, ax = plt.subplots(figsize=(6, 6), constrained_layout=True)
+nx.draw_networkx_nodes(G, pos, node_color="lightgreen", node_size=2000, ax=ax)
+nx.draw_networkx_labels(G, pos, font_size=14, font_weight="bold", ax=ax)
+for src, dst in G.edges():
+    ax.annotate(
+        "", xy=pos[dst], xytext=pos[src],
+        arrowprops=dict(arrowstyle="->", lw=2, shrinkA=15, shrinkB=15)
+    )
+ax.set_axis_off()
+st.pyplot(fig)
 
-                # Draw arrows manually
-                for src, dst in G.edges():
-                    ax.annotate(
-                        "",
-                        xy=pos[dst],
-                        xytext=pos[src],
-                        arrowprops=dict(
-                            arrowstyle="->",
-                            lw=2,
-                            shrinkA=15,
-                            shrinkB=15
-                        )
-                    )
+# -------------- Sampling --------------
+st.header("4️⃣ Sample Lotto Draws")
 
-                # Add margin so nothing is cut off
-                ax.margins(0.2)
-                ax.set_axis_off()
-
-                # Centre the plot in the page
-                col1, col2, col3 = st.columns([1, 2, 1])
-                with col2:
-                    st.pyplot(fig, use_container_width=True)
-
-            else:
-                st.error("Input must be a Python list of 2‑element tuples, e.g. [('A','B'),('B','C')].")
-
-        except Exception as e:
-            st.error(f"Could not parse your input. Please check the format.\n\n**Error:** {e}")
+num_samples = st.slider("How many draws?", 1, 100, 10)
+if st.button("🎲 Generate Samples"):
+    try:
+        sampler = BayesianModelSampling(model)
+        samples = sampler.forward_sample(size=num_samples)
+        st.dataframe(samples)
+    except Exception as e:
+        st.error(f"❌ Sampling failed: {e}")
