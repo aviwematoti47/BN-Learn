@@ -44,7 +44,7 @@ for ball in balls:
     st.write(f"Creating CPD for {ball}")
     st.write(f"Length: {len(dist)} | First 5 values: {dist[:5]}")
 
-   try:
+try:
     # Ensure 'dist' is a flat list of 52 elements
     dist_array = np.array(dist)
     if dist_array.size != 52:
