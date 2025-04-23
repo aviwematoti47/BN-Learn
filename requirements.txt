@@ -1,5 +1,5 @@
 streamlit
-pgmpy
+pgmpy==0.1.21
 networkx
 matplotlib
 numpy
