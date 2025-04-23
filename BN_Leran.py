@@ -62,17 +62,17 @@ except AttributeError as ae:
     st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
     st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
     cpd_error = True
-    break
+    return
 
 except ValueError as ve:
     st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
     cpd_error = True
-    break
+    return
 
 except Exception as e:
     st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
     cpd_error = True
-    break
+    return
 
 
 # Validate model
