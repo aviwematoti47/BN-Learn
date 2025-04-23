@@ -58,32 +58,32 @@ try:
     model.add_cpds(cpd)
     cpds.append(cpd)
 
-# except AttributeError as ae:
-#     st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
-#     st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
-#     cpd_error = True
-#     break
+except AttributeError as ae:
+    st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
+    st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
+    cpd_error = True
+    break
 
-# except ValueError as ve:
-#     st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
-#     cpd_error = True
-#     break
+except ValueError as ve:
+    st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
+    cpd_error = True
+    break
 
-# except Exception as e:
-#     st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
-#     cpd_error = True
-#     break
+except Exception as e:
+    st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
+    cpd_error = True
+    break
 
 
-# # Validate model
-# if not cpd_error:
-#     if model.check_model():
-#         st.success("✅ Bayesian Network with CPDs created and validated successfully!")
-#     else:
-#         st.error("❌ Model structure or CPDs are invalid.")
-#         st.stop()
-# else:
-#     st.stop()
+# Validate model
+if not cpd_error:
+    if model.check_model():
+        st.success("✅ Bayesian Network with CPDs created and validated successfully!")
+    else:
+        st.error("❌ Model structure or CPDs are invalid.")
+        st.stop()
+else:
+    st.stop()
 
 # Visualize the DAG
 st.subheader("📊 Lotto DAG Structure")
