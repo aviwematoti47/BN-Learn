@@ -77,7 +77,7 @@ try:
 
 # Validate model
 if not cpd_error:
-    if model.check_model():
+    except model.check_model():
         st.success("✅ Bayesian Network with CPDs created and validated successfully!")
     else:
         st.error("❌ Model structure or CPDs are invalid.")
