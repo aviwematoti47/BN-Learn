@@ -58,45 +58,45 @@ try:
     model.add_cpds(cpd)
     cpds.append(cpd)
 
-except AttributeError as ae:
-    st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
-    st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
-    cpd_error = True
-    return
+# except AttributeError as ae:
+#     st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
+#     st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
+#     cpd_error = True
+#     return
 
-except ValueError as ve:
-    st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
-    cpd_error = True
-    return
+# except ValueError as ve:
+#     st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
+#     cpd_error = True
+#     return
 
-except Exception as e:
-    st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
-    cpd_error = True
-    return
+# except Exception as e:
+#     st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
+#     cpd_error = True
+#     return
 
 
-# Validate model
-if not cpd_error:
-    if model.check_model():
-        st.success("✅ Bayesian Network with CPDs created and validated successfully!")
-    else:
-        st.error("❌ Model structure or CPDs are invalid.")
-        st.stop()
-else:
-    st.stop()
+# # Validate model
+# if not cpd_error:
+#     if model.check_model():
+#         st.success("✅ Bayesian Network with CPDs created and validated successfully!")
+#     else:
+#         st.error("❌ Model structure or CPDs are invalid.")
+#         st.stop()
+# else:
+#     st.stop()
 
-# Visualize the DAG
-st.subheader("📊 Lotto DAG Structure")
-G = nx.DiGraph()
-G.add_edges_from(edges)
-pos = nx.spring_layout(G, seed=42)
-fig, ax = plt.subplots(figsize=(7, 5))
-nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_size=12, font_weight='bold', arrows=True, ax=ax)
-ax.set_title("Lotto Bayesian Network DAG")
-st.pyplot(fig)
+# # Visualize the DAG
+# st.subheader("📊 Lotto DAG Structure")
+# G = nx.DiGraph()
+# G.add_edges_from(edges)
+# pos = nx.spring_layout(G, seed=42)
+# fig, ax = plt.subplots(figsize=(7, 5))
+# nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_size=12, font_weight='bold', arrows=True, ax=ax)
+# ax.set_title("Lotto Bayesian Network DAG")
+# st.pyplot(fig)
 
-# Simulate lotto draw
-st.subheader("🎰 Simulate Lotto Draw")
-if st.button("Draw Numbers"):
-    draw = [np.random.choice(range(1, 53), p=get_biased_distribution()) for _ in range(7)]
-    st.success(f"Your Numbers: {draw}")
+# # Simulate lotto draw
+# st.subheader("🎰 Simulate Lotto Draw")
+# if st.button("Draw Numbers"):
+#     draw = [np.random.choice(range(1, 53), p=get_biased_distribution()) for _ in range(7)]
+#     st.success(f"Your Numbers: {draw}")
