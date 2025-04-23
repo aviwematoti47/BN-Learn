@@ -44,38 +44,38 @@ for ball in balls:
     st.write(f"Creating CPD for {ball}")
     st.write(f"Length: {len(dist)} | First 5 values: {dist[:5]}")
 
-    try:
-        # FIXED: reshape to (52, 1)
-        cpd = TabularCPD(variable=ball, variable_card=52, values=np.array(dist).reshape(52, 1))
-        model.add_cpds(cpd)
-        cpds.append(cpd)
-    except ValueError as e:
-        st.error(f"❌ Error creating CPD for {ball}: {e}")
-        cpd_error = True
-        break
+#     try:
+#         # FIXED: reshape to (52, 1)
+#         cpd = TabularCPD(variable=ball, variable_card=52, values=np.array(dist).reshape(52, 1))
+#         model.add_cpds(cpd)
+#         cpds.append(cpd)
+#     except ValueError as e:
+#         st.error(f"❌ Error creating CPD for {ball}: {e}")
+#         cpd_error = True
+#         break
 
-# Validate model
-if not cpd_error:
-    if model.check_model():
-        st.success("✅ Bayesian Network with CPDs created and validated successfully!")
-    else:
-        st.error("❌ Model structure or CPDs are invalid.")
-        st.stop()
-else:
-    st.stop()
+# # Validate model
+# if not cpd_error:
+#     if model.check_model():
+#         st.success("✅ Bayesian Network with CPDs created and validated successfully!")
+#     else:
+#         st.error("❌ Model structure or CPDs are invalid.")
+#         st.stop()
+# else:
+#     st.stop()
 
-# Visualize the DAG
-st.subheader("📊 Lotto DAG Structure")
-G = nx.DiGraph()
-G.add_edges_from(edges)
-pos = nx.spring_layout(G, seed=42)
-fig, ax = plt.subplots(figsize=(7, 5))
-nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_size=12, font_weight='bold', arrows=True, ax=ax)
-ax.set_title("Lotto Bayesian Network DAG")
-st.pyplot(fig)
+# # Visualize the DAG
+# st.subheader("📊 Lotto DAG Structure")
+# G = nx.DiGraph()
+# G.add_edges_from(edges)
+# pos = nx.spring_layout(G, seed=42)
+# fig, ax = plt.subplots(figsize=(7, 5))
+# nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_size=12, font_weight='bold', arrows=True, ax=ax)
+# ax.set_title("Lotto Bayesian Network DAG")
+# st.pyplot(fig)
 
-# Simulate lotto draw
-st.subheader("🎰 Simulate Lotto Draw")
-if st.button("Draw Numbers"):
-    draw = [np.random.choice(range(1, 53), p=get_biased_distribution()) for _ in range(7)]
-    st.success(f"Your Numbers: {draw}")
+# # Simulate lotto draw
+# st.subheader("🎰 Simulate Lotto Draw")
+# if st.button("Draw Numbers"):
+#     draw = [np.random.choice(range(1, 53), p=get_biased_distribution()) for _ in range(7)]
+#     st.success(f"Your Numbers: {draw}")
