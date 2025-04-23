@@ -2,3 +2,6 @@ streamlit
 pgmpy
 networkx
 matplotlib
+numpy
+pandas
+scipy
