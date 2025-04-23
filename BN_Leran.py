@@ -1,5 +1,7 @@
 import streamlit as st
 import numpy as np
+np.product = np.prod  # Temporary fix for pgmpy bug
+
 import matplotlib.pyplot as plt
 import networkx as nx
 from pgmpy.models import BayesianNetwork
@@ -44,38 +46,35 @@ for ball in balls:
     st.write(f"Creating CPD for {ball}")
     st.write(f"Length: {len(dist)} | First 5 values: {dist[:5]}")
 
-try:
-    # Ensure 'dist' is a flat list of 52 elements
-    dist_array = np.array(dist)
-    if dist_array.size != 52:
-        raise ValueError(f"Expected 52 values in 'dist' for CPD, got {dist_array.size}")
+    try:
+        # Ensure 'dist' is a flat list of 52 elements
+        dist_array = np.array(dist)
+        if dist_array.size != 52:
+            raise ValueError(f"Expected 52 values in 'dist' for CPD, got {dist_array.size}")
 
-    # Explicit reshape to (52, 1)
-    reshaped_values = dist_array.reshape(52, 1)
+        # Explicit reshape to (52, 1)
+        reshaped_values = dist_array.reshape(52, 1)
 
-    # Creating TabularCPD
-    cpd = TabularCPD(variable=ball, variable_card=52, values=reshaped_values)
-    model.add_cpds(cpd)
-    cpds.append(cpd)
+        # Creating TabularCPD
+        cpd = TabularCPD(variable=ball, variable_card=52, values=reshaped_values)
+        model.add_cpds(cpd)
+        cpds.append(cpd)
 
-except AttributeError as ae:
-    st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
-    st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
-    cpd_error = True
-    st.stop()
+    except AttributeError as ae:
+        st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
+        st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
+        cpd_error = True
+        st.stop()
 
-except ValueError as ve:
-    st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
-    cpd_error = True
-    st.stop()
+    except ValueError as ve:
+        st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
+        cpd_error = True
+        st.stop()
 
-except Exception as e:
-    st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
-    cpd_error = True
-    st.stop()
-
-
-
+    except Exception as e:
+        st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
+        cpd_error = True
+        st.stop()
 
 # Validate model
 if not cpd_error:
@@ -102,3 +101,4 @@ st.subheader("🎰 Simulate Lotto Draw")
 if st.button("Draw Numbers"):
     draw = [np.random.choice(range(1, 53), p=get_biased_distribution()) for _ in range(7)]
     st.success(f"Your Numbers: {draw}")
+
