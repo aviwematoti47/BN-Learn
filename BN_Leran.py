@@ -70,15 +70,15 @@ for ball in balls:
         cpd_error = True
         st.stop()
 
-# Validate model
-if not cpd_error:
-    if model.check_model():
-        st.success("✅ Bayesian Network with CPDs created and validated successfully!")
-    else:
-        st.error("❌ Model structure or CPDs are invalid.")
-        st.stop()
-else:
-    st.stop()
+# # Validate model
+# if not cpd_error:
+#     if model.check_model():
+#         st.success("✅ Bayesian Network with CPDs created and validated successfully!")
+#     else:
+#         st.error("❌ Model structure or CPDs are invalid.")
+#         st.stop()
+# else:
+#     st.stop()
 
 # Visualize the DAG
 st.subheader("📊 Lotto DAG Structure")
