@@ -1,7 +1,9 @@
-import streamlit as st
 import numpy as np
-np.product = np.prod  # Temporary fix for pgmpy bug
+# Patch np.product if it's missing
+if not hasattr(np, "product"):
+    np.product = np.prod
 
+import streamlit as st
 import matplotlib.pyplot as plt
 import networkx as nx
 from pgmpy.models import BayesianNetwork
@@ -47,16 +49,8 @@ for ball in balls:
     st.write(f"Length: {len(dist)} | First 5 values: {dist[:5]}")
 
     try:
-        # Ensure 'dist' is a flat list of 52 elements
-        dist_array = np.array(dist)
-        if dist_array.size != 52:
-            raise ValueError(f"Expected 52 values in 'dist' for CPD, got {dist_array.size}")
-
-        # Explicit reshape to (52, 1)
-        reshaped_values = dist_array.reshape(52, 1)
-
-        # Creating TabularCPD
-        cpd = TabularCPD(variable=ball, variable_card=52, values=reshaped_values)
+        dist_array = np.array(dist).reshape(52, 1)
+        cpd = TabularCPD(variable=ball, variable_card=52, values=dist_array)
         model.add_cpds(cpd)
         cpds.append(cpd)
 
@@ -101,4 +95,3 @@ st.subheader("🎰 Simulate Lotto Draw")
 if st.button("Draw Numbers"):
     draw = [np.random.choice(range(1, 53), p=get_biased_distribution()) for _ in range(7)]
     st.success(f"Your Numbers: {draw}")
-
