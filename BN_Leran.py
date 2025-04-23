@@ -21,35 +21,34 @@ st.code(str(edges), language='python')
 model = DiscreteBayesianNetwork(edges)
 
 # -------------- Constructive Bias Setup --------------
-st.header("2️⃣ Apply Constructive Bias")
+st.header("2️⃣ Apply Constructive Bias to All Balls")
 
-apply_bias = st.checkbox("Apply constructive bias to Ball_1?")
-biased_values = [3, 7, 15, 28, 33, 44, 51]  # Hot numbers from experience/perception
+apply_bias = st.checkbox("Apply constructive bias to all balls?", value=True)
+hot_numbers = [3, 7, 15, 28, 33, 44, 51]  # Example: perceived lucky numbers
 
-# Construct bias for all 7 balls
-hot_numbers = [3, 7, 15, 28, 33, 44, 51]
 def create_biased_cpd(ball_name):
     probs = [0.07 if i+1 in hot_numbers else 0.002 for i in range(52)]
     total = sum(probs)
-    norm_probs = [[p/total for p in probs]]
+    norm_probs = [[p / total for p in probs]]
     return TabularCPD(ball_name, 52, norm_probs)
 
-# Apply to all balls
-cpds = [create_biased_cpd(f'Ball_{i}') for i in range(1, 8)]
-for cpd in cpds:
-    model.add_cpds(cpd)
-
-# Optional: Define uniform CPTs for remaining nodes (not conditional yet)
-for i in range(2, 8):
-    cpd = TabularCPD(f"Ball_{i}", 52, [[1/52 for _ in range(52)]])
-    model.add_cpds(cpd)
+if apply_bias:
+    for ball in nodes:
+        cpd = create_biased_cpd(ball)
+        model.add_cpds(cpd)
+    st.success("✅ Constructive bias applied to all balls.")
+else:
+    uniform_probs = [[1 / 52 for _ in range(52)]]
+    for ball in nodes:
+        model.add_cpds(TabularCPD(ball, 52, uniform_probs))
+    st.info("ℹ️ Uniform distribution applied to all balls.")
 
 # -------------- Network Visualization --------------
 st.header("3️⃣ DAG Visualization")
 
 G = nx.DiGraph()
 G.add_edges_from(edges)
-pos = nx.spring_layout(G)
+pos = nx.spring_layout(G, seed=42)
 
 fig, ax = plt.subplots(figsize=(6, 6), constrained_layout=True)
 nx.draw_networkx_nodes(G, pos, node_color="lightgreen", node_size=2000, ax=ax)
