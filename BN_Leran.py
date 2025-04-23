@@ -44,15 +44,15 @@ for ball in balls:
     st.write(f"Creating CPD for {ball}")
     st.write(f"Length: {len(dist)} | First 5 values: {dist[:5]}")
 
-#     try:
-#         # FIXED: reshape to (52, 1)
-#         cpd = TabularCPD(variable=ball, variable_card=52, values=np.array(dist).reshape(52, 1))
-#         model.add_cpds(cpd)
-#         cpds.append(cpd)
-#     except ValueError as e:
-#         st.error(f"❌ Error creating CPD for {ball}: {e}")
-#         cpd_error = True
-#         break
+    try:
+        # FIXED: reshape to (52, 1)
+        cpd = TabularCPD(variable=ball, variable_card=52, values=np.array(dist).reshape(52, 1))
+        model.add_cpds(cpd)
+        cpds.append(cpd)
+    except ValueError as e:
+        st.error(f"❌ Error creating CPD for {ball}: {e}")
+        cpd_error = True
+        break
 
 # # Validate model
 # if not cpd_error:
