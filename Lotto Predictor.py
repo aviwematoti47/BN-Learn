@@ -86,12 +86,14 @@ def get_biased_distribution(n):
 # Visualize DAG
 st.subheader("🧠 DAG Structure")
 G = nx.DiGraph()
-G.add_edges_from(edges + [])  # Only main ball edges
-pos = nx.spring_layout(G, seed=42)
+G.add_edges_from(edges)  # Only main ball edges
+G.add_node("PowerBall")  # Add PowerBall before layout so it gets a position
+
+pos = nx.spring_layout(G, seed=42)  # Generate positions after all nodes added
+
 fig, ax = plt.subplots(figsize=(7, 5))
 nx.draw(G, pos, with_labels=True, node_size=3000, node_color='lightgreen',
         font_size=12, font_weight='bold', arrows=True, ax=ax)
-G.add_node("PowerBall")  # Add node manually for display
 nx.draw_networkx_nodes(G, pos, nodelist=["PowerBall"], node_color="lightcoral", node_size=3000, ax=ax)
 nx.draw_networkx_labels(G, pos, labels={"PowerBall": "PowerBall"}, font_size=12, ax=ax)
 ax.set_title("PowerBall DAG")
