@@ -44,44 +44,44 @@ def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# Define CPDs
-cpds = []
-for i, ball in enumerate(all_balls):
-    cardinality = 45 if ball != "PowerBall" else 20
-    dist = get_biased_distribution(cardinality)
+# # Define CPDs
+# cpds = []
+# for i, ball in enumerate(all_balls):
+#     cardinality = 45 if ball != "PowerBall" else 20
+#     dist = get_biased_distribution(cardinality)
 
-    if ball == "Ball_1" or ball == "PowerBall":
-        # No parent
-        cpd = TabularCPD(variable=ball, variable_card=cardinality,
-                         values=[[p] for p in dist])
-    else:
-        parent = all_balls[i - 1]
-        parent_cardinality = 45
-        values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
+#     if ball == "Ball_1" or ball == "PowerBall":
+#         # No parent
+#         cpd = TabularCPD(variable=ball, variable_card=cardinality,
+#                          values=[[p] for p in dist])
+#     else:
+#         parent = all_balls[i - 1]
+#         parent_cardinality = 45
+#         values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
 
-        cpd = TabularCPD(variable=ball, variable_card=cardinality,
-                         values=values,
-                         evidence=[parent],
-                         evidence_card=[parent_cardinality])
-    cpds.append(cpd)
+#         cpd = TabularCPD(variable=ball, variable_card=cardinality,
+#                          values=values,
+#                          evidence=[parent],
+#                          evidence_card=[parent_cardinality])
+#     cpds.append(cpd)
 
-# Add CPDs to the model
-try:
-    model.add_cpds(*cpds)
-except Exception as e:
-    st.error(f"❌ Error while adding CPDs: {e}")
-    st.stop()
+# # Add CPDs to the model
+# try:
+#     model.add_cpds(*cpds)
+# except Exception as e:
+#     st.error(f"❌ Error while adding CPDs: {e}")
+#     st.stop()
 
-# Validate model
-try:
-    if model.check_model():
-        st.success("✅ Bayesian Network with CPDs created and validated!")
-    else:
-        st.error("❌ Model is invalid.")
-        st.stop()
-except Exception as e:
-    st.error(f"❌ Validation error: {e}")
-    st.stop()
+# # Validate model
+# try:
+#     if model.check_model():
+#         st.success("✅ Bayesian Network with CPDs created and validated!")
+#     else:
+#         st.error("❌ Model is invalid.")
+#         st.stop()
+# except Exception as e:
+#     st.error(f"❌ Validation error: {e}")
+#     st.stop()
 
 # Visualize DAG
 st.subheader("🧠 DAG Structure")
