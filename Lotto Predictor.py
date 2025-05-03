@@ -44,11 +44,11 @@ def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# # Define CPDs
-# cpds = []
-# for i, ball in enumerate(all_balls):
-#     cardinality = 45 if ball != "PowerBall" else 20
-#     dist = get_biased_distribution(cardinality)
+# Define CPDs
+cpds = []
+for i, ball in enumerate(all_balls):
+    cardinality = 45 if ball != "PowerBall" else 20
+    dist = get_biased_distribution(cardinality)
 
 #     if ball == "Ball_1" or ball == "PowerBall":
 #         # No parent
