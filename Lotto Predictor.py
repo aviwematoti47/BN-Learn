@@ -64,12 +64,7 @@ for i, ball in enumerate(all_balls):
                          values=values,
                          evidence=[parent],
                          evidence_card=[parent_cardinality])
-
-#         cpd = TabularCPD(variable=ball, variable_card=cardinality,
-#                          values=values,
-#                          evidence=[parent],
-#                          evidence_card=[parent_cardinality])
-#     cpds.append(cpd)
+    cpds.append(cpd)
 
 # # Add CPDs to the model
 # try:
