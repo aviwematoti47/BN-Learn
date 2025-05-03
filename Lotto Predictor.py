@@ -5,6 +5,7 @@ import networkx as nx
 import random  # ✅ This was missing — now fixed
 from pgmpy.models import BayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
+import pandas as pd
 
 # Patch np.product if it's missing (older NumPy versions)
 if not hasattr(np, "product"):
@@ -13,7 +14,7 @@ if not hasattr(np, "product"):
 # Page configuration
 st.set_page_config(page_title="Lotto Bayesian Network", layout="centered")
 st.title("🎲 Lotto Bayesian Network Simulator")
-st.markdown("""
+st.markdown(""" 
 This app simulates a **biased Bayesian Network** for Lotto numbers (1–52).
 - **7 Lotto Balls** (6 normal + 1 bonus).
 - **Constructive bias** added to each ball.
@@ -137,3 +138,32 @@ if st.button("Run Strategy Simulation"):
     nums, powerball = strategy_funcs[selected_strategy]()
     st.success(f"🎲 Strategy: {selected_strategy}")
     st.write(f"🟢 Numbers: {nums} + 🔴 PowerBall: {powerball}")
+
+# --------------------------------------
+# 🗂️ Upload Historical Lotto Data Section
+# --------------------------------------
+st.subheader("📥 Upload Historical Lotto Data")
+
+# Add the file uploader widget
+uploaded_file = st.file_uploader("Upload Historical Lotto Data", type=["xlsx"])
+
+if uploaded_file is not None:
+    try:
+        # Read the Excel file
+        df = pd.read_excel(uploaded_file)
+
+        # Display the first few rows of the dataframe
+        st.write("Historical Data:", df.head())
+
+        # You can also plot or manipulate the data as needed
+        # For example, visualize some data
+        st.subheader("Lotto Number Distribution")
+        plt.figure(figsize=(10, 6))
+        df['Lotto Number'].value_counts().sort_index().plot(kind='bar', color='skyblue')
+        plt.title("Lotto Number Frequency")
+        plt.xlabel("Lotto Numbers")
+        plt.ylabel("Frequency")
+        st.pyplot()
+
+    except Exception as e:
+        st.error(f"Error reading the file: {e}")
