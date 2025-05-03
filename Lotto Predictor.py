@@ -27,11 +27,16 @@ if uploaded_file is not None:
         st.error(f"❌ Error reading file: {e}")
         st.stop()
 
-# Define nodes and edges (chain structure)
-balls = [f"Ball_{i}" for i in range(1, 6)] + ["PowerBall"]
-edges = [(balls[i], balls[i+1]) for i in range(len(balls) - 1)]
+# Define nodes
+main_balls = [f"Ball_{i}" for i in range(1, 6)]
+powerball = "PowerBall"
+all_balls = main_balls + [powerball]
 
-# Create model
+# Define edges for the DAG (main balls only)
+edges = [(main_balls[i], main_balls[i + 1]) for i in range(len(main_balls) - 1)]
+# PowerBall has no parent → no edge added for PowerBall
+
+# Create Bayesian model
 model = BayesianNetwork(edges)
 
 # Biased distribution function
@@ -39,28 +44,27 @@ def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# Define CPDs for each ball
+# Define CPDs
 cpds = []
-for i, ball in enumerate(balls):
-    # For balls 1 to 5 (main balls), set the cardinality to 45, PowerBall gets 20
+for i, ball in enumerate(all_balls):
     cardinality = 45 if ball != "PowerBall" else 20
     dist = get_biased_distribution(cardinality)
 
-    if i == 0:
-        # No parent → reshape as column vector
+    if ball == "Ball_1" or ball == "PowerBall":
+        # No parent
         cpd = TabularCPD(variable=ball, variable_card=cardinality,
                          values=[[p] for p in dist])
     else:
-        parent = balls[i - 1]
-        parent_cardinality = 45 if parent != "PowerBall" else 20
+        parent = all_balls[i - 1]
+        parent_cardinality = 45
         values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
 
         cpd = TabularCPD(variable=ball, variable_card=cardinality,
                          values=values,
                          evidence=[parent],
                          evidence_card=[parent_cardinality])
-
     cpds.append(cpd)
+
 # Add CPDs to the model
 try:
     model.add_cpds(*cpds)
@@ -82,10 +86,14 @@ except Exception as e:
 # Visualize DAG
 st.subheader("🧠 DAG Structure")
 G = nx.DiGraph()
-G.add_edges_from(edges)
+G.add_edges_from(edges + [])  # Only main ball edges
 pos = nx.spring_layout(G, seed=42)
 fig, ax = plt.subplots(figsize=(7, 5))
-nx.draw(G, pos, with_labels=True, node_size=3000, node_color='lightgreen', font_size=12, font_weight='bold', arrows=True, ax=ax)
+nx.draw(G, pos, with_labels=True, node_size=3000, node_color='lightgreen',
+        font_size=12, font_weight='bold', arrows=True, ax=ax)
+G.add_node("PowerBall")  # Add node manually for display
+nx.draw_networkx_nodes(G, pos, nodelist=["PowerBall"], node_color="lightcoral", node_size=3000, ax=ax)
+nx.draw_networkx_labels(G, pos, labels={"PowerBall": "PowerBall"}, font_size=12, ax=ax)
 ax.set_title("PowerBall DAG")
 st.pyplot(fig)
 
