@@ -1,15 +1,16 @@
 import numpy as np
-# Patch np.product if it's missing
-if not hasattr(np, "product"):
-    np.product = np.prod
-
 import streamlit as st
 import matplotlib.pyplot as plt
 import networkx as nx
+import random  # ✅ This was missing — now fixed
 from pgmpy.models import BayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 
-# Page config
+# Patch np.product if it's missing (older NumPy versions)
+if not hasattr(np, "product"):
+    np.product = np.prod
+
+# Page configuration
 st.set_page_config(page_title="Lotto Bayesian Network", layout="centered")
 st.title("🎲 Lotto Bayesian Network Simulator")
 st.markdown("""
@@ -28,25 +29,21 @@ model = BayesianNetwork(edges)
 
 # Function to generate a biased distribution favoring lower numbers
 def get_biased_distribution():
-    raw = np.array([1 / (i + 1) for i in range(52)])  # i from 0 to 51 → 1 to 52
+    raw = np.array([1 / (i + 1) for i in range(52)])  # Bias toward lower numbers
     return list(raw / raw.sum())
 
-# Define CPDs with validation
+# Define CPDs with error handling
 cpds = []
 cpd_error = False
 
 for ball in balls:
     dist = get_biased_distribution()
 
-    # Validate shape
+    # Validate distribution length
     if len(dist) != 52:
         st.error(f"❌ Distribution for {ball} is invalid. Expected 52 values, got {len(dist)}.")
         cpd_error = True
         break
-
-    # Debug display
-    st.write(f"Creating CPD for {ball}")
-    st.write(f"Length: {len(dist)} | First 5 values: {dist[:5]}")
 
     try:
         dist_array = np.array(dist).reshape(52, 1)
@@ -54,33 +51,22 @@ for ball in balls:
         model.add_cpds(cpd)
         cpds.append(cpd)
 
-    except AttributeError as ae:
-        st.error(f"⚠️ AttributeError while creating CPD for {ball}: {ae}")
-        st.warning("This might be due to an incorrect NumPy call inside pgmpy (e.g., using np.product instead of np.prod).")
-        cpd_error = True
-        st.stop()
-
-    except ValueError as ve:
-        st.error(f"❌ ValueError creating CPD for {ball}: {ve}")
-        cpd_error = True
-        st.stop()
-
     except Exception as e:
-        st.error(f"🔥 Unexpected error while creating CPD for {ball}: {e}")
+        st.error(f"🔥 Error while creating CPD for {ball}: {e}")
         cpd_error = True
         st.stop()
 
-# # Validate model
-# if not cpd_error:
-#     if model.check_model():
-#         st.success("✅ Bayesian Network with CPDs created and validated successfully!")
-#     else:
-#         st.error("❌ Model structure or CPDs are invalid.")
-#         st.stop()
-# else:
-#     st.stop()
+# Validate model
+if not cpd_error:
+    if model.check_model():
+        st.success("✅ Bayesian Network with CPDs created and validated successfully!")
+    else:
+        st.error("❌ Model structure or CPDs are invalid.")
+        st.stop()
+else:
+    st.stop()
 
-# Visualize the DAG
+# Visualize DAG
 st.subheader("📊 Lotto DAG Structure")
 G = nx.DiGraph()
 G.add_edges_from(edges)
@@ -90,12 +76,12 @@ nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_siz
 ax.set_title("Lotto Bayesian Network DAG")
 st.pyplot(fig)
 
-# ----------------------------
-# 🎯 Strategy-Based Simulation
-# ----------------------------
+# --------------------------------------
+# 🎯 Strategy-Based Simulation Section
+# --------------------------------------
 st.subheader("🧠 Strategy-Based PowerBall Simulation")
 
-# Define helper functions
+# Helper functions
 def is_prime(n):
     if n < 2:
         return False
@@ -144,12 +130,10 @@ strategy_funcs = {
     "Favor Prime Numbers": generate_favor_primes
 }
 
-# User selects strategy
+# User selection
 selected_strategy = st.selectbox("Select a Bias Strategy", list(strategy_funcs.keys()))
+
 if st.button("Run Strategy Simulation"):
     nums, powerball = strategy_funcs[selected_strategy]()
     st.success(f"🎲 Strategy: {selected_strategy}")
     st.write(f"🟢 Numbers: {nums} + 🔴 PowerBall: {powerball}")
-
-
-
