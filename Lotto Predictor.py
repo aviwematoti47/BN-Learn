@@ -1,3 +1,4 @@
+
 import numpy as np
 import random
 import pandas as pd
@@ -27,76 +28,85 @@ if uploaded_file is not None:
         st.error(f"❌ Error reading file: {e}")
         st.stop()
 
-# Define nodes
+# Define balls
 main_balls = [f"Ball_{i}" for i in range(1, 6)]
-powerball = "PowerBall"
-all_balls = main_balls + [powerball]
+all_balls = main_balls + ["PowerBall"]
 
-# Define edges for the DAG (main balls only)
-edges = [(main_balls[i], main_balls[i + 1]) for i in range(len(main_balls) - 1)]
-# PowerBall has no parent → no edge added for PowerBall
+# Define edges
+edges_main = [(main_balls[i], main_balls[i+1]) for i in range(len(main_balls) - 1)]
+edges_power = []  # PowerBall has no parent or child
+edges = edges_main + edges_power
 
-# Create Bayesian model
+# Create model
 model = BayesianNetwork(edges)
+
+# Define cardinalities
+cardinalities = {ball: 45 for ball in main_balls}
+cardinalities["PowerBall"] = 20
 
 # Biased distribution function
 def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
+# Conditional distribution based on parent value
+def conditional_dist_given_parent(parent_val, child_cardinality):
+    probs = np.array([1 / (abs(i - parent_val) + 1) for i in range(1, child_cardinality + 1)])
+    return (probs / probs.sum()).tolist()
+
 # Define CPDs
 cpds = []
 for i, ball in enumerate(all_balls):
-    cardinality = 45 if ball != "PowerBall" else 20
-    dist = get_biased_distribution(cardinality)
+    card = cardinalities[ball]
 
     if ball == "Ball_1" or ball == "PowerBall":
-    # No parent
-    cpd = TabularCPD(variable=ball, variable_card=cardinality,
-                     values=[[p] for p in dist])
+        dist = get_biased_distribution(card)
+        cpd = TabularCPD(variable=ball, variable_card=card,
+                         values=[[p] for p in dist])
     else:
         parent = all_balls[i - 1]
-        parent_cardinality = 45  # Adjust this dynamically if needed
-        # Create a matrix of shape (child_card, parent_card)
-        values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
+        parent_card = cardinalities[parent]
+
+        matrix = []
+        for parent_val in range(1, parent_card + 1):
+            cond_dist = conditional_dist_given_parent(parent_val, card)
+            matrix.append(cond_dist)
         
-        cpd = TabularCPD(variable=ball, variable_card=cardinality,
-                         values=values,
+        matrix_T = np.array(matrix).T.tolist()
+
+        cpd = TabularCPD(variable=ball, variable_card=card,
+                         values=matrix_T,
                          evidence=[parent],
-                         evidence_card=[parent_cardinality])
+                         evidence_card=[parent_card])
+
     cpds.append(cpd)
 
-# # Add CPDs to the model
-# try:
-#     model.add_cpds(*cpds)
-# except Exception as e:
-#     st.error(f"❌ Error while adding CPDs: {e}")
-#     st.stop()
+# Add CPDs to the model
+try:
+    model.add_cpds(*cpds)
+except Exception as e:
+    st.error(f"❌ Error while adding CPDs: {e}")
+    st.stop()
 
-# # Validate model
-# try:
-#     if model.check_model():
-#         st.success("✅ Bayesian Network with CPDs created and validated!")
-#     else:
-#         st.error("❌ Model is invalid.")
-#         st.stop()
-# except Exception as e:
-#     st.error(f"❌ Validation error: {e}")
-#     st.stop()
+# Validate model
+try:
+    if model.check_model():
+        st.success("✅ Bayesian Network with CPDs created and validated!")
+    else:
+        st.error("❌ Model is invalid.")
+        st.stop()
+except Exception as e:
+    st.error(f"❌ Validation error: {e}")
+    st.stop()
 
 # Visualize DAG
 st.subheader("🧠 DAG Structure")
 G = nx.DiGraph()
-G.add_edges_from(edges)  # Only main ball edges
-G.add_node("PowerBall")  # Add PowerBall before layout so it gets a position
-
-pos = nx.spring_layout(G, seed=42)  # Generate positions after all nodes added
-
+G.add_edges_from(edges)
+pos = nx.spring_layout(G, seed=42)
 fig, ax = plt.subplots(figsize=(7, 5))
-nx.draw(G, pos, with_labels=True, node_size=3000, node_color='lightgreen',
-        font_size=12, font_weight='bold', arrows=True, ax=ax)
+nx.draw(G, pos, with_labels=True, node_size=3000, node_color='lightblue', font_size=12, font_weight='bold', arrows=True, ax=ax)
 nx.draw_networkx_nodes(G, pos, nodelist=["PowerBall"], node_color="lightcoral", node_size=3000, ax=ax)
-nx.draw_networkx_labels(G, pos, labels={"PowerBall": "PowerBall"}, font_size=12, ax=ax)
 ax.set_title("PowerBall DAG")
 st.pyplot(fig)
 
