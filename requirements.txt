@@ -4,3 +4,4 @@ numpy
 matplotlib
 networkx
 pgmpy==0.1.18
+openpyxl==3.1.2
