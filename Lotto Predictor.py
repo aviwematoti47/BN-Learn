@@ -46,9 +46,10 @@ for i, ball in enumerate(balls):
     cardinality = 45 if ball != "PowerBall" else 20
     dist = get_biased_distribution(cardinality)
 
-    # The CPD for Ball_1 does not have parents
     if i == 0:
-        cpd = TabularCPD(variable=ball, variable_card=cardinality, values=[dist])
+        # No parent → reshape as column vector
+        cpd = TabularCPD(variable=ball, variable_card=cardinality,
+                         values=[[p] for p in dist])
     else:
         parent = balls[i - 1]
         parent_cardinality = 45 if parent != "PowerBall" else 20
@@ -60,7 +61,6 @@ for i, ball in enumerate(balls):
                          evidence_card=[parent_cardinality])
 
     cpds.append(cpd)
-
 # Add CPDs to the model
 try:
     model.add_cpds(*cpds)
