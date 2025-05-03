@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="PowerBall Bayesian Network Simulator", layout="centered")
 st.title("🎲 PowerBall Bayesian Network Simulator")
 st.markdown("""
-This app simulates a **biased Bayesian Network** for South African PowerBall numbers:
+This app simulates a **biased Bayesian Network** for PowerBall numbers:
 - **5 Main Balls** drawn from numbers **1 to 45**
 - **1 PowerBall** drawn from numbers **1 to 20**
 """)
