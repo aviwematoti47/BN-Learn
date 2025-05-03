@@ -1,7 +1,7 @@
-streamlit
-pandas
-numpy
-matplotlib
-networkx
-pgmpy==0.1.18
-openpyxl==3.1.2
+streamlit>=1.25.0
+pandas>=1.5.3
+numpy>=1.23.0
+matplotlib>=3.7.1
+networkx>=3.1
+pgmpy==0.1.24
+openpyxl>=3.1.2
