@@ -43,7 +43,7 @@ def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# Add CPDs
+# Add CPDs (including parent-child relationships)
 cpd_error = False
 for i, ball in enumerate(balls):
     dist = get_biased_distribution(45 if i < 5 else 20)
