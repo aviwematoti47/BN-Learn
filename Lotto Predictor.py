@@ -90,17 +90,66 @@ nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_siz
 ax.set_title("Lotto Bayesian Network DAG")
 st.pyplot(fig)
 
-# Simulate lotto draw
-st.subheader("🎰 Simulate Lotto Draw")
-if st.button("Draw Numbers"):
-    numbers = np.arange(1, 53)
-    probs = get_biased_distribution()
-    
-    # Sample without replacement using biased probabilities
-    draw = np.random.choice(numbers, size=7, replace=False, p=probs)
-    main = draw[:6]
-    bonus = draw[6]
-    st.success(f"🎯 Main Numbers: {sorted(main.tolist())} | ⭐ Bonus: {bonus}")
-    
+# ----------------------------
+# 🎯 Strategy-Based Simulation
+# ----------------------------
+st.subheader("🧠 Strategy-Based PowerBall Simulation")
+
+# Define helper functions
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5)+1):
+        if n % i == 0:
+            return False
+    return True
+
+primes = [n for n in range(1, 51) if is_prime(n)]
+evens = [n for n in range(1, 51) if n % 2 == 0]
+odds = [n for n in range(1, 51) if n % 2 != 0]
+low_range = list(range(1, 31))
+
+# Strategy generators
+def generate_favor_odd():
+    return sorted(random.sample(odds, 3) + random.sample(evens, 2)), random.randint(1, 20)
+
+def generate_favor_even():
+    return sorted(random.sample(evens, 3) + random.sample(odds, 2)), random.randint(1, 20)
+
+def generate_avoid_primes():
+    non_primes = [n for n in range(1, 51) if n not in primes]
+    return sorted(random.sample(non_primes, 5)), random.randint(1, 20)
+
+def generate_no_sequential():
+    nums = []
+    while len(nums) < 5:
+        n = random.randint(1, 50)
+        if all(abs(n - x) > 1 for x in nums):
+            nums.append(n)
+    return sorted(nums), random.randint(1, 20)
+
+def generate_avoid_high():
+    return sorted(random.sample(low_range, 5)), random.randint(1, 20)
+
+def generate_favor_primes():
+    return sorted(random.sample(primes, 3) + random.sample([n for n in range(1, 51) if n not in primes], 2)), random.randint(1, 20)
+
+# Strategy options
+strategy_funcs = {
+    "Favor Odd Numbers": generate_favor_odd,
+    "Favor Even Numbers": generate_favor_even,
+    "Avoid Prime Numbers": generate_avoid_primes,
+    "Avoid Sequential Numbers": generate_no_sequential,
+    "Avoid High Numbers": generate_avoid_high,
+    "Favor Prime Numbers": generate_favor_primes
+}
+
+# User selects strategy
+selected_strategy = st.selectbox("Select a Bias Strategy", list(strategy_funcs.keys()))
+if st.button("Run Strategy Simulation"):
+    nums, powerball = strategy_funcs[selected_strategy]()
+    st.success(f"🎲 Strategy: {selected_strategy}")
+    st.write(f"🟢 Numbers: {nums} + 🔴 PowerBall: {powerball}")
+
 
 
