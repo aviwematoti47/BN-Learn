@@ -12,7 +12,7 @@ if not hasattr(np, "product"):
     np.product = np.prod
 
 # Page config
-st.set_page_config(page_title="PowerBall Bayesian Simulator", layout="centered")
+st.set_page_config(page_title="PowerBall Bayesian Network Simulator", layout="centered")
 st.title("🎲 PowerBall Bayesian Network Simulator")
 st.markdown("""
 This app simulates a **biased Bayesian Network** for South African PowerBall numbers:
@@ -43,7 +43,7 @@ def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# Add CPDs (including parent-child relationships)
+# Add CPDs (with parent-child relationships)
 cpd_error = False
 for i, ball in enumerate(balls):
     dist = get_biased_distribution(45 if i < 5 else 20)
@@ -60,6 +60,12 @@ for i, ball in enumerate(balls):
         st.error(f"🔥 Error while creating CPD for {ball}: {e}")
         cpd_error = True
         st.stop()
+
+# Explicitly define parent-child relationships for each ball
+for i, ball in enumerate(balls):
+    if i < len(balls) - 1:
+        # Each ball (except the last) should depend on the previous ball
+        model.add_edge(balls[i], balls[i+1])
 
 # Validate model
 if not cpd_error:
