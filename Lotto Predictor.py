@@ -1,4 +1,3 @@
-
 import numpy as np
 import random
 import pandas as pd
@@ -8,7 +7,7 @@ from pgmpy.factors.discrete import TabularCPD
 import networkx as nx
 import matplotlib.pyplot as plt
 
-# Page config
+# Streamlit config
 st.set_page_config(page_title="PowerBall Bayesian Network Simulator", layout="centered")
 st.title("🎲 PowerBall Bayesian Network Simulator")
 st.markdown("""
@@ -28,60 +27,41 @@ if uploaded_file is not None:
         st.error(f"❌ Error reading file: {e}")
         st.stop()
 
-# Define balls
+# Define nodes
 main_balls = [f"Ball_{i}" for i in range(1, 6)]
 all_balls = main_balls + ["PowerBall"]
 
-# Define edges
-edges_main = [(main_balls[i], main_balls[i+1]) for i in range(len(main_balls) - 1)]
-edges_power = []  # PowerBall has no parent or child
-edges = edges_main + edges_power
+# Define edges for the main balls chain
+edges = [(main_balls[i], main_balls[i+1]) for i in range(len(main_balls)-1)]
 
-# Create model
+# Create model and add PowerBall as a separate node (no parent)
 model = BayesianNetwork(edges)
+model.add_node("PowerBall")  # Ensure it's known to the model
 
-# Define cardinalities
-cardinalities = {ball: 45 for ball in main_balls}
-cardinalities["PowerBall"] = 20
-
-# Biased distribution function
+# Biased distribution helper
 def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# Conditional distribution based on parent value
-def conditional_dist_given_parent(parent_val, child_cardinality):
-    probs = np.array([1 / (abs(i - parent_val) + 1) for i in range(1, child_cardinality + 1)])
-    return (probs / probs.sum()).tolist()
-
 # Define CPDs
 cpds = []
 for i, ball in enumerate(all_balls):
-    card = cardinalities[ball]
+    cardinality = 45 if ball != "PowerBall" else 20
+    dist = get_biased_distribution(cardinality)
 
     if ball == "Ball_1" or ball == "PowerBall":
-        dist = get_biased_distribution(card)
-        cpd = TabularCPD(variable=ball, variable_card=card,
-                         values=[[p] for p in dist])
+        cpd = TabularCPD(variable=ball, variable_card=cardinality, values=[[p] for p in dist])
     else:
         parent = all_balls[i - 1]
-        parent_card = cardinalities[parent]
-
-        matrix = []
-        for parent_val in range(1, parent_card + 1):
-            cond_dist = conditional_dist_given_parent(parent_val, card)
-            matrix.append(cond_dist)
-        
-        matrix_T = np.array(matrix).T.tolist()
-
-        cpd = TabularCPD(variable=ball, variable_card=card,
-                         values=matrix_T,
+        parent_cardinality = 45
+        values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
+        cpd = TabularCPD(variable=ball, variable_card=cardinality,
+                         values=values,
                          evidence=[parent],
-                         evidence_card=[parent_card])
-
+                         evidence_card=[parent_cardinality])
     cpds.append(cpd)
 
-# Add CPDs to the model
+# Add CPDs to model
 try:
     model.add_cpds(*cpds)
 except Exception as e:
@@ -103,10 +83,13 @@ except Exception as e:
 st.subheader("🧠 DAG Structure")
 G = nx.DiGraph()
 G.add_edges_from(edges)
+G.add_node("PowerBall")  # Include PowerBall as a node
 pos = nx.spring_layout(G, seed=42)
 fig, ax = plt.subplots(figsize=(7, 5))
-nx.draw(G, pos, with_labels=True, node_size=3000, node_color='lightblue', font_size=12, font_weight='bold', arrows=True, ax=ax)
+nx.draw_networkx_nodes(G, pos, nodelist=main_balls, node_color="lightgreen", node_size=3000, ax=ax)
 nx.draw_networkx_nodes(G, pos, nodelist=["PowerBall"], node_color="lightcoral", node_size=3000, ax=ax)
+nx.draw_networkx_edges(G, pos, edgelist=edges, arrows=True, ax=ax)
+nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold', ax=ax)
 ax.set_title("PowerBall DAG")
 st.pyplot(fig)
 
@@ -115,7 +98,6 @@ st.pyplot(fig)
 # -----------------------------
 st.subheader("🎯 Strategy-Based PowerBall Simulation")
 
-# Helper functions
 def is_prime(n):
     if n < 2:
         return False
@@ -154,7 +136,6 @@ def generate_avoid_high():
 def generate_favor_primes():
     return sorted(random.sample(primes, 3) + random.sample([n for n in range(1, 46) if n not in primes], 2)), random.randint(1, 20)
 
-# Strategy options
 strategy_funcs = {
     "Favor Odd Numbers": generate_favor_odd,
     "Favor Even Numbers": generate_favor_even,
@@ -164,9 +145,8 @@ strategy_funcs = {
     "Favor Prime Numbers": generate_favor_primes
 }
 
-# User selection
+# Run simulation
 selected_strategy = st.selectbox("Select a Bias Strategy", list(strategy_funcs.keys()))
-
 if st.button("Run Strategy Simulation"):
     nums, powerball = strategy_funcs[selected_strategy]()
     st.success(f"🎲 Strategy: {selected_strategy}")
