@@ -1,15 +1,11 @@
 import numpy as np
-import streamlit as st
-import matplotlib.pyplot as plt
-import networkx as nx
 import random
 import pandas as pd
+import streamlit as st
 from pgmpy.models import BayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
-
-# Ensure compatibility with older NumPy versions
-if not hasattr(np, "product"):
-    np.product = np.prod
+import networkx as nx
+import matplotlib.pyplot as plt
 
 # Page config
 st.set_page_config(page_title="PowerBall Bayesian Network Simulator", layout="centered")
@@ -43,41 +39,40 @@ def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# Add CPDs (with parent-child relationships)
-cpd_error = False
+# Define CPDs for each ball
+cpds = []
 for i, ball in enumerate(balls):
-    dist = get_biased_distribution(45 if i < 5 else 20)
-    if len(dist) != (45 if i < 5 else 20):
-        st.error(f"Invalid distribution for {ball}.")
-        cpd_error = True
-        break
-    try:
-        dist_array = np.array(dist).reshape(-1, 1)
-        cpd = TabularCPD(variable=ball, variable_card=dist_array.shape[0], values=dist_array)
-        model.add_node(ball)
-        model.add_cpds(cpd)
-    except Exception as e:
-        st.error(f"🔥 Error while creating CPD for {ball}: {e}")
-        cpd_error = True
-        st.stop()
+    # For balls 1 to 5 (main balls), set the cardinality to 45, PowerBall gets 20
+    cardinality = 45 if i < 5 else 20
+    dist = get_biased_distribution(cardinality)
+    
+    # The CPD for Ball_1 does not have parents
+    if i == 0:
+        cpd = TabularCPD(variable=ball, variable_card=cardinality, values=[dist])
+    else:
+        # For subsequent balls, they depend on the previous ball
+        cpd = TabularCPD(variable=ball, variable_card=cardinality, values=[dist],
+                         evidence=[balls[i-1]], evidence_card=[45])  # Each depends on the previous ball
+    
+    cpds.append(cpd)
 
-# Explicitly define parent-child relationships for each ball
-for i, ball in enumerate(balls):
-    if i < len(balls) - 1:
-        # Each ball (except the last) should depend on the previous ball
-        model.add_edge(balls[i], balls[i+1])
+# Add CPDs to the model
+try:
+    model.add_cpds(*cpds)
+except Exception as e:
+    st.error(f"❌ Error while adding CPDs: {e}")
+    st.stop()
 
 # Validate model
-if not cpd_error:
-    try:
-        if model.check_model():
-            st.success("✅ Bayesian Network with CPDs created and validated!")
-        else:
-            st.error("❌ Model is invalid.")
-            st.stop()
-    except Exception as e:
-        st.error(f"❌ Validation error: {e}")
+try:
+    if model.check_model():
+        st.success("✅ Bayesian Network with CPDs created and validated!")
+    else:
+        st.error("❌ Model is invalid.")
         st.stop()
+except Exception as e:
+    st.error(f"❌ Validation error: {e}")
+    st.stop()
 
 # Visualize DAG
 st.subheader("🧠 DAG Structure")
