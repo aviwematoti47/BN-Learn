@@ -1,9 +1,5 @@
 streamlit
-pgmpy==0.1.21
-networkx
 matplotlib
+networkx
+pgmpy
 numpy
-pandas
-scipy
-pydot
-graphviz
