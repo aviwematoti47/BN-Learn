@@ -39,34 +39,34 @@ def get_biased_distribution(n):
     raw = np.array([1 / (i + 1) for i in range(n)])
     return list(raw / raw.sum())
 
-# # Define CPDs for each ball
-# cpds = []
-# for i, ball in enumerate(balls):
-#     # For balls 1 to 5 (main balls), set the cardinality to 45, PowerBall gets 20
-#     cardinality = 45 if ball != "PowerBall" else 20
-#     dist = get_biased_distribution(cardinality)
+# Define CPDs for each ball
+cpds = []
+for i, ball in enumerate(balls):
+    # For balls 1 to 5 (main balls), set the cardinality to 45, PowerBall gets 20
+    cardinality = 45 if ball != "PowerBall" else 20
+    dist = get_biased_distribution(cardinality)
 
-#     if i == 0:
-#         # No parent → reshape as column vector
-#         cpd = TabularCPD(variable=ball, variable_card=cardinality,
-#                          values=[[p] for p in dist])
-#     else:
-#         parent = balls[i - 1]
-#         parent_cardinality = 45 if parent != "PowerBall" else 20
-#         values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
+    if i == 0:
+        # No parent → reshape as column vector
+        cpd = TabularCPD(variable=ball, variable_card=cardinality,
+                         values=[[p] for p in dist])
+    else:
+        parent = balls[i - 1]
+        parent_cardinality = 45 if parent != "PowerBall" else 20
+        values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
 
-#         cpd = TabularCPD(variable=ball, variable_card=cardinality,
-#                          values=values,
-#                          evidence=[parent],
-#                          evidence_card=[parent_cardinality])
+        cpd = TabularCPD(variable=ball, variable_card=cardinality,
+                         values=values,
+                         evidence=[parent],
+                         evidence_card=[parent_cardinality])
 
-#     cpds.append(cpd)
-# # Add CPDs to the model
-# try:
-#     model.add_cpds(*cpds)
-# except Exception as e:
-#     st.error(f"❌ Error while adding CPDs: {e}")
-#     st.stop()
+    cpds.append(cpd)
+# Add CPDs to the model
+try:
+    model.add_cpds(*cpds)
+except Exception as e:
+    st.error(f"❌ Error while adding CPDs: {e}")
+    st.stop()
 
 # Validate model
 try:
