@@ -51,13 +51,19 @@ for i, ball in enumerate(all_balls):
     dist = get_biased_distribution(cardinality)
 
     if ball == "Ball_1" or ball == "PowerBall":
-        # No parent
-        cpd = TabularCPD(variable=ball, variable_card=cardinality,
-                         values=[[p] for p in dist])
+    # No parent
+    cpd = TabularCPD(variable=ball, variable_card=cardinality,
+                     values=[[p] for p in dist])
     else:
         parent = all_balls[i - 1]
-        parent_cardinality = 45
+        parent_cardinality = 45  # Adjust this dynamically if needed
+        # Create a matrix of shape (child_card, parent_card)
         values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
+        
+        cpd = TabularCPD(variable=ball, variable_card=cardinality,
+                         values=values,
+                         evidence=[parent],
+                         evidence_card=[parent_cardinality])
 
 #         cpd = TabularCPD(variable=ball, variable_card=cardinality,
 #                          values=values,
