@@ -1,6 +1,6 @@
-streamlit==1.24.1
-numpy==1.24.2
-matplotlib==3.7.1
-networkx==3.1
-pgmpy==0.1.19
-pandas==2.0.3
+streamlit
+pandas
+numpy
+matplotlib
+networkx
+pgmpy==0.1.18
