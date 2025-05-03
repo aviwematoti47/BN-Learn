@@ -28,8 +28,20 @@ if uploaded_file is not None:
         st.stop()
 
 # Define nodes
-main_balls = [f"Ball_{i}" for i in range(1, 6)]
-all_balls = main_balls + ["PowerBall"]
+balls = [f"Ball_{i}" for i in range(1, 6)]
+powerball = "PowerBall"
+all_balls = balls + [powerball]
+
+# Generate fully connected DAG
+edges = []
+for i in range(1, len(balls)):
+    for j in range(i):
+        edges.append((balls[j], balls[i]))
+
+# PowerBall depends on all 5 main balls
+for ball in balls:
+    edges.append((ball, powerball))
+
 
 # Define edges for the main balls chain
 edges = [(main_balls[i], main_balls[i+1]) for i in range(len(main_balls)-1)]
