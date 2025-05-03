@@ -43,17 +43,22 @@ def get_biased_distribution(n):
 cpds = []
 for i, ball in enumerate(balls):
     # For balls 1 to 5 (main balls), set the cardinality to 45, PowerBall gets 20
-    cardinality = 45 if i < 5 else 20
+    cardinality = 45 if ball != "PowerBall" else 20
     dist = get_biased_distribution(cardinality)
-    
+
     # The CPD for Ball_1 does not have parents
     if i == 0:
         cpd = TabularCPD(variable=ball, variable_card=cardinality, values=[dist])
     else:
-        # For subsequent balls, they depend on the previous ball
-        cpd = TabularCPD(variable=ball, variable_card=cardinality, values=[dist],
-                         evidence=[balls[i-1]], evidence_card=[45])  # Each depends on the previous ball
-    
+        parent = balls[i - 1]
+        parent_cardinality = 45 if parent != "PowerBall" else 20
+        values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
+
+        cpd = TabularCPD(variable=ball, variable_card=cardinality,
+                         values=values,
+                         evidence=[parent],
+                         evidence_card=[parent_cardinality])
+
     cpds.append(cpd)
 
 # Add CPDs to the model
