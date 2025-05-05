@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="PowerBall Bayesian Network Simulator", layout="centered")
 st.title("🎲 PowerBall Bayesian Network Simulator")
 st.markdown("""
-This app simulates a **biased Bayesian Network** for PowerBall numbers:
+This app simulates a **biased Bayesian Network** for South African PowerBall numbers:
 - **5 Main Balls** drawn from numbers **1 to 45**
 - **1 PowerBall** drawn from numbers **1 to 20**
 """)
@@ -29,19 +29,14 @@ if uploaded_file is not None:
 
 # Define nodes
 main_balls = [f"Ball_{i}" for i in range(1, 6)]
-powerball = "PowerBall"
-all_balls = main_balls + [powerball]
+all_balls = main_balls + ["PowerBall"]
 
-# Fully connected DAG
-edges = []
-for i in range(1, len(main_balls)):
-    for j in range(i):
-        edges.append((main_balls[j], main_balls[i]))
-for ball in main_balls:
-    edges.append((ball, powerball))
+# Define edges for the main balls chain
+edges = [(main_balls[i], main_balls[i+1]) for i in range(len(main_balls)-1)]
 
-# Create model
+# Create model and add PowerBall as a separate node (no parent)
 model = BayesianNetwork(edges)
+model.add_node("PowerBall")  # Ensure it's known to the model
 
 # Biased distribution helper
 def get_biased_distribution(n):
@@ -54,18 +49,16 @@ for i, ball in enumerate(all_balls):
     cardinality = 45 if ball != "PowerBall" else 20
     dist = get_biased_distribution(cardinality)
 
-    parents = model.get_parents(ball)
-    if not parents:
-        cpd = TabularCPD(variable=ball, variable_card=cardinality,
-                         values=[[p] for p in dist])
+    if ball == "Ball_1" or ball == "PowerBall":
+        cpd = TabularCPD(variable=ball, variable_card=cardinality, values=[[p] for p in dist])
     else:
-        parent_cardinalities = [45 if p != "PowerBall" else 20 for p in parents]
-        value_matrix = np.tile(dist, (np.prod(parent_cardinalities), 1)).T.tolist()
-
+        parent = all_balls[i - 1]
+        parent_cardinality = 45
+        values = np.tile(dist, (parent_cardinality, 1)).T.tolist()
         cpd = TabularCPD(variable=ball, variable_card=cardinality,
-                         values=value_matrix,
-                         evidence=parents,
-                         evidence_card=parent_cardinalities)
+                         values=values,
+                         evidence=[parent],
+                         evidence_card=[parent_cardinality])
     cpds.append(cpd)
 
 # Add CPDs to model
@@ -90,13 +83,14 @@ except Exception as e:
 st.subheader("🧠 DAG Structure")
 G = nx.DiGraph()
 G.add_edges_from(edges)
+G.add_node("PowerBall")  # Include PowerBall as a node
 pos = nx.spring_layout(G, seed=42)
 fig, ax = plt.subplots(figsize=(7, 5))
 nx.draw_networkx_nodes(G, pos, nodelist=main_balls, node_color="lightgreen", node_size=3000, ax=ax)
-nx.draw_networkx_nodes(G, pos, nodelist=[powerball], node_color="lightcoral", node_size=3000, ax=ax)
+nx.draw_networkx_nodes(G, pos, nodelist=["PowerBall"], node_color="lightcoral", node_size=3000, ax=ax)
 nx.draw_networkx_edges(G, pos, edgelist=edges, arrows=True, ax=ax)
 nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold', ax=ax)
-ax.set_title("PowerBall Fully Connected DAG")
+ax.set_title("PowerBall DAG")
 st.pyplot(fig)
 
 # -----------------------------
